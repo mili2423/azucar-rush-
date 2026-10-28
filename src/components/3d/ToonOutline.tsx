@@ -8,14 +8,14 @@ interface ToonOutlineProps {
   renderOrder?: number;
 }
 
-export const ToonOutline: React.FC<ToonOutlineProps> = ({
-  geometry,
-  thickness = 0.025,
-  color = '#2a1714',
-  renderOrder = 0,
-}) => {
-  const material = useMemo(() => {
-    return new THREE.ShaderMaterial({
+// Caché global de materiales para no compilar shaders repetidos ni duplicar objetos WebGL
+const materialCache = new Map<string, THREE.ShaderMaterial>();
+
+function getOrCreateOutlineMaterial(thickness: number, color: string): THREE.ShaderMaterial {
+  const key = `${thickness.toFixed(4)}_${color}`;
+  let mat = materialCache.get(key);
+  if (!mat) {
+    mat = new THREE.ShaderMaterial({
       uniforms: {
         thickness: { value: thickness },
         outlineColor: { value: new THREE.Color(color) },
@@ -36,15 +36,24 @@ export const ToonOutline: React.FC<ToonOutlineProps> = ({
       side: THREE.BackSide,
       depthWrite: true,
     });
+    materialCache.set(key, mat);
+  }
+  return mat;
+}
+
+export const ToonOutline: React.FC<ToonOutlineProps> = ({
+  geometry,
+  thickness = 0.025,
+  color = '#2a1714',
+  renderOrder = 0,
+}) => {
+  const material = useMemo(() => {
+    return getOrCreateOutlineMaterial(thickness, color);
   }, [thickness, color]);
 
   return <mesh geometry={geometry} material={material} renderOrder={renderOrder} />;
 };
 
-/**
- * ToonMesh: Un helper conveniente que renderiza un mesh con su material principal
- * y automáticamente adjunta el contorno invertido estilizado.
- */
 interface ToonMeshProps {
   geometry: THREE.BufferGeometry;
   children?: React.ReactNode;

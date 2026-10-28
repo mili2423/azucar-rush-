@@ -1,4 +1,4 @@
-import { GameProgress, PlayerUpgrades } from '@/types/game';
+import { GameProgress, PlayerUpgrades, getUnlockedRecipesForLevel } from '@/types/game';
 
 const STORAGE_KEY = 'azucar_rush_save_data_v1';
 
@@ -12,6 +12,7 @@ const DEFAULT_UPGRADES: PlayerUpgrades = {
 
 const DEFAULT_PROGRESS: GameProgress = {
   unlockedLevel: 1,
+  unlockedRecipes: getUnlockedRecipesForLevel(1),
   highScore: 0,
   totalCoins: 0,
   starsPerLevel: {},
@@ -26,9 +27,14 @@ export const loadGameProgress = (): GameProgress => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PROGRESS;
     const parsed = JSON.parse(raw);
+    const lvl = parsed.unlockedLevel || 1;
     return {
       ...DEFAULT_PROGRESS,
       ...parsed,
+      unlockedLevel: lvl,
+      unlockedRecipes: parsed.unlockedRecipes && parsed.unlockedRecipes.length > 0
+        ? parsed.unlockedRecipes
+        : getUnlockedRecipesForLevel(lvl),
       upgrades: { ...DEFAULT_UPGRADES, ...(parsed.upgrades || {}) },
       starsPerLevel: parsed.starsPerLevel || {},
     };
@@ -41,7 +47,12 @@ export const loadGameProgress = (): GameProgress => {
 export const saveGameProgress = (progress: GameProgress): void => {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    const lvl = progress.unlockedLevel || 1;
+    const toSave: GameProgress = {
+      ...progress,
+      unlockedRecipes: progress.unlockedRecipes || getUnlockedRecipesForLevel(lvl),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch (err) {
     console.error('Failed to save progress to localStorage', err);
   }

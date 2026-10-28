@@ -45,6 +45,8 @@ export const BakeryScene: React.FC<BakerySceneProps> = ({
     <div className="relative w-full h-full select-none">
       <Canvas
         shadows
+        dpr={[1, 1.5]}
+        gl={{ powerPreference: 'high-performance', antialias: true, alpha: false }}
         camera={{ position: [0, 1.7, 0], fov: 72 }}
         className="w-full h-full cursor-crosshair"
       >

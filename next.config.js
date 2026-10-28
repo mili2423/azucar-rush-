@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  assetPrefix: './',
+  images: {
+    unoptimized: true,
+  },
   transpilePackages: ['three'],
   reactStrictMode: false,
   webpack: (config, { isServer }) => {

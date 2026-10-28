@@ -119,6 +119,42 @@ export const RECIPES: Record<ProductId, Recipe> = {
   },
 };
 
+// Orden de desbloqueo fila por fila en la grilla (de a 2 por nivel)
+export interface RecipeUnlockInfo {
+  recipeId: ProductId;
+  unlockLevel: number;
+}
+
+export const RECIPE_UNLOCK_ORDER: RecipeUnlockInfo[] = [
+  { recipeId: 'cookie', unlockLevel: 1 },
+  { recipeId: 'cupcake', unlockLevel: 1 },
+  { recipeId: 'donut', unlockLevel: 2 },
+  { recipeId: 'tart', unlockLevel: 2 },
+  { recipeId: 'cake', unlockLevel: 3 },
+  { recipeId: 'pastry', unlockLevel: 3 },
+];
+
+export function getRecipeUnlockLevel(recipeId: ProductId): number {
+  const item = RECIPE_UNLOCK_ORDER.find(r => r.recipeId === recipeId);
+  return item ? item.unlockLevel : 1;
+}
+
+export function isRecipeUnlocked(recipeId: ProductId, currentUnlockedLevel: number): boolean {
+  return currentUnlockedLevel >= getRecipeUnlockLevel(recipeId);
+}
+
+export function getUnlockedRecipesForLevel(unlockedLevel: number): ProductId[] {
+  return RECIPE_UNLOCK_ORDER
+    .filter(r => r.unlockLevel <= unlockedLevel)
+    .map(r => r.recipeId);
+}
+
+export function getNewRecipesUnlockedAtLevel(level: number): Recipe[] {
+  return RECIPE_UNLOCK_ORDER
+    .filter(r => r.unlockLevel === level)
+    .map(r => RECIPES[r.recipeId]);
+}
+
 // ----------------------------------------------------------------------------
 // 3. ESTADOS DE LA BANDEJA (LO QUE SOSTIENE EL JUGADOR)
 // ----------------------------------------------------------------------------
@@ -215,6 +251,7 @@ export interface PlayerUpgrades {
 
 export interface GameProgress {
   unlockedLevel: number;
+  unlockedRecipes?: ProductId[];
   highScore: number;
   totalCoins: number;
   starsPerLevel: Record<number, number>; // levelNumber -> estrellas (1..3)

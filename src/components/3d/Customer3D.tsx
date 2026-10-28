@@ -78,6 +78,8 @@ const ImpatientCustomerFeatures: React.FC<{
   const hairGeo = useMemo(() => new SphereGeometry(0.36, 16, 16), []);
   const watchGeo = useMemo(() => new TorusGeometry(0.065, 0.022, 8, 16), []);
   const watchFaceGeo = useMemo(() => new BoxGeometry(0.06, 0.06, 0.03), []);
+  const sleeveGeo = useMemo(() => new CylinderGeometry(0.08, 0.075, 0.26, 12), []);
+  const shoeGeo = useMemo(() => new BoxGeometry(0.12, 0.1, 0.22), []);
 
   return (
     <>
@@ -106,7 +108,7 @@ const ImpatientCustomerFeatures: React.FC<{
         <mesh position={[0, -0.12, 0]}>
           <cylinderGeometry args={[0.08, 0.075, 0.26, 12]} />
           <meshStandardMaterial color="#fb923c" roughness={0.5} />
-          <ToonOutline geometry={new CylinderGeometry(0.08, 0.075, 0.26, 12)} thickness={0.014} />
+          <ToonOutline geometry={sleeveGeo} thickness={0.014} />
         </mesh>
         {/* Mano */}
         <mesh position={[0, -0.28, 0]}>
@@ -136,7 +138,7 @@ const ImpatientCustomerFeatures: React.FC<{
         <mesh position={[0, -0.05, 0.08]}>
           <boxGeometry args={[0.12, 0.1, 0.22]} />
           <meshStandardMaterial color="#ef4444" roughness={0.4} />
-          <ToonOutline geometry={new BoxGeometry(0.12, 0.1, 0.22)} thickness={0.014} />
+          <ToonOutline geometry={shoeGeo} thickness={0.014} />
         </mesh>
         <mesh position={[0, -0.08, 0.09]}>
           <boxGeometry args={[0.13, 0.04, 0.23]} />
@@ -158,6 +160,7 @@ const FrequentCustomerFeatures: React.FC<{ scarfTailRef: React.RefObject<Group> 
   const pompomGeo = useMemo(() => new SphereGeometry(0.1, 12, 12), []);
   const scarfRingGeo = useMemo(() => new TorusGeometry(0.26, 0.07, 8, 20), []);
   const cardGeo = useMemo(() => new BoxGeometry(0.14, 0.2, 0.01), []);
+  const scarfTailBoxGeo = useMemo(() => new BoxGeometry(0.12, 0.32, 0.04), []);
 
   return (
     <>
@@ -198,7 +201,7 @@ const FrequentCustomerFeatures: React.FC<{ scarfTailRef: React.RefObject<Group> 
           <mesh position={[0, -0.16, 0]}>
             <boxGeometry args={[0.12, 0.32, 0.04]} />
             <meshStandardMaterial color="#78350f" roughness={0.7} />
-            <ToonOutline geometry={new BoxGeometry(0.12, 0.32, 0.04)} thickness={0.014} />
+            <ToonOutline geometry={scarfTailBoxGeo} thickness={0.014} />
           </mesh>
           {/* Rayas crema en la bufanda */}
           {[-0.08, -0.22].map((y, idx) => (
@@ -255,6 +258,8 @@ const SpecialCustomerFeatures: React.FC<{ sparklesRef: React.RefObject<Group> }>
   const gemGeo = useMemo(() => new SphereGeometry(0.04, 8, 8), []);
   const trimGeo = useMemo(() => new BoxGeometry(0.05, 0.65, 0.03), []);
   const starGeo = useMemo(() => new ConeGeometry(0.04, 0.09, 4), []);
+  const specialHairGeo = useMemo(() => new SphereGeometry(0.35, 16, 16), []);
+  const coatCollarGeo = useMemo(() => new BoxGeometry(0.38, 0.12, 0.24), []);
 
   return (
     <>
@@ -288,7 +293,7 @@ const SpecialCustomerFeatures: React.FC<{ sparklesRef: React.RefObject<Group> }>
       <mesh position={[0, 0.08, -0.08]}>
         <sphereGeometry args={[0.35, 16, 16]} />
         <meshStandardMaterial color="#4c1d95" roughness={0.5} />
-        <ToonOutline geometry={new SphereGeometry(0.35, 16, 16)} thickness={0.018} />
+        <ToonOutline geometry={specialHairGeo} thickness={0.018} />
       </mesh>
 
       {/* Ribete dorado del abrigo real */}
@@ -308,7 +313,7 @@ const SpecialCustomerFeatures: React.FC<{ sparklesRef: React.RefObject<Group> }>
       <mesh position={[0, -0.32, -0.05]} rotation={[0.2, 0, 0]}>
         <boxGeometry args={[0.38, 0.12, 0.24]} />
         <meshStandardMaterial color="#581c87" roughness={0.4} />
-        <ToonOutline geometry={new BoxGeometry(0.38, 0.12, 0.24)} thickness={0.016} />
+        <ToonOutline geometry={coatCollarGeo} thickness={0.016} />
       </mesh>
 
       {/* Partículas / Estrellitas doradas de aura VIP flotando suavemente */}
@@ -390,6 +395,7 @@ export const Customer3D: React.FC<Customer3DProps> = ({ currentOrder }) => {
   const highlightGeo = useMemo(() => new SphereGeometry(0.018, 6, 6), []);
   const browGeo = useMemo(() => new BoxGeometry(0.1, 0.024, 0.02), []);
   const mouthGeo = useMemo(() => new BoxGeometry(0.08, 0.025, 0.02), []);
+  const haloOutlineGeo = useMemo(() => new TorusGeometry(0.28, 0.03, 8, 28), []);
 
   // Determinar si mostramos cliente activo o cliente en reacción de salida
   const isExiting = !currentOrder && lastCustomerRef.current !== null;
@@ -703,7 +709,7 @@ export const Customer3D: React.FC<Customer3DProps> = ({ currentOrder }) => {
           <mesh rotation={[Math.PI / 2, 0, 0]}>
             <torusGeometry args={[0.28, 0.03, 8, 28]} />
             <meshStandardMaterial color="#1e293b" />
-            <ToonOutline geometry={new TorusGeometry(0.28, 0.03, 8, 28)} thickness={0.012} />
+            <ToonOutline geometry={haloOutlineGeo} thickness={0.012} />
           </mesh>
 
           {/* Anillo luminoso de progreso */}

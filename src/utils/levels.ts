@@ -8,7 +8,10 @@ import { LevelDefinition } from '@/types/game';
  * - timeLimitSeconds: Tiempo total del reloj del nivel.
  * - targetMoney: Meta de dinero requerida para ganar el nivel.
  * - customerCount: Cantidad total de clientes que visitarán el local ese día.
- * - availableProducts: Productos y recetas desbloqueadas en ese nivel.
+ * - availableProducts: Productos y recetas desbloqueadas en ese nivel:
+ *     * Nivel 1: Galletita y Cupcake de Chocolate.
+ *     * Nivel 2: Donut Glaseada y Tarta de Frutilla (+ anteriores).
+ *     * Nivel 3 en adelante: Torta de Cumpleaños y Factura Artesanal (+ anteriores).
  * - allowMultiOrders: Si los clientes pueden pedir 2 o más recetas en un solo pedido.
  * - burnSpeed: Multiplicador de qué tan rápido se quema el horno (1 = normal, >1 = más rápido).
  * - patienceMultiplier: Multiplicador de paciencia base del cliente (<1 = menos paciencia).
@@ -19,11 +22,11 @@ export const LEVELS: LevelDefinition[] = [
     levelNumber: 1,
     title: 'Primer Día',
     subtitle: 'Abre la vieja pastelería y aprende las recetas básicas',
-    storyIntro: '¡Bienvenido a tu primer día! Los vecinos del pueblo se han enterado de la reapertura. Prepara galletitas, cupcakes y donuts para complacerlos.',
-    targetMoney: 2000,
+    storyIntro: '¡Bienvenido a tu primer día! Los vecinos del pueblo se han enterado de la reapertura. Prepara galletitas y cupcakes de chocolate para complacerlos.',
+    targetMoney: 1800,
     customerCount: 3,
     timeLimitSeconds: 220, // Tiempo generoso para el primer día
-    availableProducts: ['cookie', 'cupcake', 'donut'],
+    availableProducts: ['cookie', 'cupcake'],
     customerTypes: ['normal', 'frequent'],
     allowMultiOrders: false,
     burnSpeed: 0.8,           // Horno quema lento (dificultad baja)
@@ -42,8 +45,8 @@ export const LEVELS: LevelDefinition[] = [
     levelNumber: 2,
     title: 'Más Clientes',
     subtitle: 'El aroma a vainilla atrae a más comensales',
-    storyIntro: '¡El aroma de tus primeros dulces atrajo miradas! Se suma la deliciosa Tarta de Frutilla al menú. Prepárate para atender pedidos de múltiples delicias.',
-    targetMoney: 4500,
+    storyIntro: '¡El aroma de tus primeros dulces atrajo miradas! Se suman la Donut Glaseada y la Tarta de Frutilla al menú.',
+    targetMoney: 4000,
     customerCount: 5,
     timeLimitSeconds: 260,
     availableProducts: ['cookie', 'cupcake', 'donut', 'tart'],
@@ -57,11 +60,11 @@ export const LEVELS: LevelDefinition[] = [
     levelNumber: 3,
     title: 'Hora Pico',
     subtitle: 'El pueblo hace cola frente al mostrador',
-    storyIntro: '¡La hora del té es una locura! Los clientes tienen menos paciencia y esperan su pedido calientito. Administra tus idas y vueltas al horno con sabiduría.',
-    targetMoney: 7000,
+    storyIntro: '¡La hora del té es una locura! Se suman la majestuosa Torta de Cumpleaños y la Factura Artesanal.',
+    targetMoney: 6500,
     customerCount: 8,
     timeLimitSeconds: 300,
-    availableProducts: ['cookie', 'cupcake', 'donut', 'tart', 'pastry'],
+    availableProducts: ['cookie', 'cupcake', 'donut', 'tart', 'cake', 'pastry'],
     customerTypes: ['normal', 'impatient', 'frequent'],
     allowMultiOrders: true,
     burnSpeed: 1.5,           // El horno se pone caliente — quema más rápido
@@ -72,11 +75,11 @@ export const LEVELS: LevelDefinition[] = [
     levelNumber: 4,
     title: 'Gran Pedido',
     subtitle: 'Fiestas y eventos especiales del pueblo',
-    storyIntro: 'El alcalde y las familias del pueblo encargan pedidos gigantes para sus celebraciones. Llega la magnífica Torta de Cumpleaños.',
-    targetMoney: 10000,
+    storyIntro: 'El alcalde y las familias del pueblo encargan pedidos gigantes para sus celebraciones con todas las delicias disponibles.',
+    targetMoney: 9500,
     customerCount: 9,
     timeLimitSeconds: 340,
-    availableProducts: ['cookie', 'cupcake', 'donut', 'tart', 'pastry', 'cake'],
+    availableProducts: ['cookie', 'cupcake', 'donut', 'tart', 'cake', 'pastry'],
     customerTypes: ['normal', 'frequent', 'special'],
     allowMultiOrders: true,
     burnSpeed: 1.9,           // Horno muy caliente — hay que estar pendiente
@@ -88,10 +91,10 @@ export const LEVELS: LevelDefinition[] = [
     title: 'Gran Apertura',
     subtitle: '¡La consagración definitiva de Azúcar Rush!',
     storyIntro: '¡El gran día ha llegado! La pastelería luce impecable y todo el pueblo asiste a la Gran Apertura oficial. ¡Alcanza la meta y conviértete en una leyenda pastelera!',
-    targetMoney: 14000,
+    targetMoney: 13000,
     customerCount: 12,
     timeLimitSeconds: 380,
-    availableProducts: ['cookie', 'cupcake', 'donut', 'tart', 'pastry', 'cake'],
+    availableProducts: ['cookie', 'cupcake', 'donut', 'tart', 'cake', 'pastry'],
     customerTypes: ['normal', 'impatient', 'frequent', 'special'],
     allowMultiOrders: true,
     burnSpeed: 2.4,           // El horno a máxima temperatura — un descuido y se quema

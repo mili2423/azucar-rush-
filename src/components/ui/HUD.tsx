@@ -1,9 +1,38 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CustomerOrder, INGREDIENTS, ProductId, RECIPES, TrayState, DECORATION_OPTIONS, DEFAULT_PRODUCT_DECORATIONS } from '@/types/game';
-import { Volume2, VolumeX, Heart, Clock, Award, Trash2, BookOpen, X, Sparkles, UtensilsCrossed, Package, DollarSign } from 'lucide-react';
-import { CandyCard, CandyBadge, CandyProgressBar, CandyButton, CandyModal, CandyToast } from '@/components/ui/design-system';
+import {
+  CustomerOrder,
+  INGREDIENTS,
+  ProductId,
+  RECIPES,
+  TrayState,
+  DECORATION_OPTIONS,
+  DEFAULT_PRODUCT_DECORATIONS,
+  RECIPE_UNLOCK_ORDER,
+  isRecipeUnlocked,
+} from '@/types/game';
+import {
+  Volume2,
+  VolumeX,
+  Heart,
+  Clock,
+  Award,
+  Trash2,
+  BookOpen,
+  Sparkles,
+  UtensilsCrossed,
+  Package,
+  Lock,
+} from 'lucide-react';
+import {
+  CandyCard,
+  CandyBadge,
+  CandyProgressBar,
+  CandyButton,
+  CandyModal,
+  CandyToast,
+} from '@/components/ui/design-system';
 
 interface HUDProps {
   levelNumber: number;
@@ -26,6 +55,7 @@ interface HUDProps {
   availableProducts?: ProductId[];
   onOpenTutorial?: () => void;
   difficultyLabel?: string;
+  unlockedLevel?: number;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -46,9 +76,10 @@ export const HUD: React.FC<HUDProps> = ({
   onPause,
   toast,
   mixingProgress,
-  availableProducts = ['cookie', 'cupcake', 'donut'],
+  availableProducts = ['cookie', 'cupcake'],
   onOpenTutorial,
   difficultyLabel,
+  unlockedLevel = 1,
 }) => {
   const [showRecipesModal, setShowRecipesModal] = useState(false);
 
@@ -207,8 +238,9 @@ export const HUD: React.FC<HUDProps> = ({
 
       {/* ================================================================ */}
       {/* 1. TOP BAR REAGRUPADA: 3 BLOQUES COMPACTOS CON DISEÑO UNIFICADO */}
+      {/* pl-14 sm:pl-16 deja libre el logo superior izquierdo sin solaparse */}
       {/* ================================================================ */}
-      <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+      <div className="flex flex-wrap items-center justify-between gap-2 w-full pl-14 sm:pl-16">
         {/* --- BLOQUE IZQUIERDO: Progreso del Día y Ganancias --- */}
         <CandyCard variant="cream" className="flex items-center p-0 border-2 border-pink-200 shadow-sm">
           <div className="flex items-center gap-2 px-3 py-1.5">
@@ -475,7 +507,7 @@ export const HUD: React.FC<HUDProps> = ({
           </CandyCard>
         )}
 
-        {/* Tarjeta B: En tus Manos (Mismo sistema visual y proporción) */}
+        {/* Tarjeta B: En tus Manos */}
         <CandyCard
           variant="cream"
           className="pointer-events-auto min-w-[260px] max-w-sm w-full p-3.5 border-2 border-pink-200/90 shadow-md"
@@ -505,14 +537,14 @@ export const HUD: React.FC<HUDProps> = ({
       </div>
 
       {/* ================================================================ */}
-      {/* MODAL DE RECETAS (CandyModal)                                     */}
+      {/* MODAL DE RECETAS (CandyModal con Desbloqueos Nivel por Nivel)      */}
       {/* ================================================================ */}
       {showRecipesModal && (
         <CandyModal
           isOpen={showRecipesModal}
           onClose={() => setShowRecipesModal(false)}
           title="Libro de Recetas"
-          subtitle="Consulta los ingredientes y tiempos de horneado"
+          subtitle="Consulta ingredientes, tiempos de horneado y estado de desbloqueo"
           icon={<BookOpen className="w-6 h-6 text-pink-600" />}
           maxWidth="lg"
           footer={
@@ -527,31 +559,58 @@ export const HUD: React.FC<HUDProps> = ({
           }
         >
           <div className="space-y-2.5">
-            {availableProducts.map(prodId => {
-              const rec = RECIPES[prodId];
+            {RECIPE_UNLOCK_ORDER.map(({ recipeId, unlockLevel }) => {
+              const rec = RECIPES[recipeId];
+              const unlocked = isRecipeUnlocked(recipeId, unlockedLevel);
+
               return (
                 <CandyCard
-                  key={`rec-${prodId}`}
-                  variant="cream"
-                  className="p-3 flex items-center justify-between border-2 border-pink-100"
+                  key={`rec-${recipeId}`}
+                  variant={unlocked ? 'cream' : 'neutral'}
+                  className={`p-3 flex items-center justify-between border-2 transition-all ${
+                    unlocked
+                      ? 'border-pink-100 shadow-2xs'
+                      : 'border-stone-200 bg-stone-100/60 opacity-60 grayscale'
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm bg-pink-100 text-pink-700 border border-pink-200">
-                      {rec.name.substring(0, 2).toUpperCase()}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm bg-pink-100 text-pink-700 border border-pink-200 shrink-0">
+                      {rec.emoji}
                     </div>
-                    <div>
-                      <div className="text-xs font-black text-[#451a03]">{rec.name}</div>
-                      <div className="text-[11px] font-bold text-pink-700 mt-0.5">
+                    <div className="truncate">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-[#451a03] truncate">
+                          {rec.name}
+                        </span>
+                        {!unlocked && (
+                          <Lock className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                        )}
+                      </div>
+                      <div className="text-[11px] font-bold text-pink-700 mt-0.5 truncate">
                         {rec.ingredients.map(i => INGREDIENTS[i].name).join(' + ')}
                       </div>
-                      <div className="text-[10px] text-stone-400 mt-0.5">
+                      <div className="text-[10px] text-stone-500 mt-0.5 truncate">
                         Horno: {rec.bakeTimeSeconds}s {rec.requiresDecoration ? '· Requiere Decoración' : ''}
                       </div>
+                      {!unlocked && (
+                        <div className="text-[10px] font-black text-rose-600 mt-0.5">
+                          Se desbloquea en el nivel {unlockLevel}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <CandyBadge variant="warning" size="sm">
-                    ${rec.price}
-                  </CandyBadge>
+
+                  <div className="shrink-0 ml-2">
+                    {unlocked ? (
+                      <CandyBadge variant="warning" size="sm">
+                        ${rec.price}
+                      </CandyBadge>
+                    ) : (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-stone-200 text-stone-600">
+                        ${rec.price}
+                      </span>
+                    )}
+                  </div>
                 </CandyCard>
               );
             })}

@@ -14,6 +14,28 @@ interface PlayerControllerProps {
   enabled?: boolean;
 }
 
+// Vectores pre-asignados a nivel de módulo para evitar Garbage Collection en cada fotograma
+const ORIGIN_2D = new Vector2(0, 0);
+const _dir = new Vector3();
+const _camDir = new Vector3();
+const _camSide = new Vector3();
+const _up = new Vector3(0, 1, 0);
+
+const VALID_INTERACTABLE_NAMES = [
+  'flour',
+  'egg',
+  'milk',
+  'chocolate',
+  'sugar',
+  'strawberry',
+  'mixer',
+  'oven',
+  'decorating',
+  'counter',
+  'customer',
+  'trash',
+];
+
 export const PlayerController: React.FC<PlayerControllerProps> = ({
   walkSpeedBonus,
   onFocusChange,
@@ -31,13 +53,20 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
   const justLockedTime = useRef(0);
   const controlsRef = useRef<ThreePointerLockControls | null>(null);
 
-  // Initial camera position & view
+  // Evitar re-renders y re-suscripciones innecesarias de listeners
+  const onInteractRef = useRef(onInteract);
+  onInteractRef.current = onInteract;
+
+  const lastFocusRef = useRef<string | null>(null);
+  const frameCounterRef = useRef<number>(0);
+
+  // Posición y orientación inicial de la cámara
   useEffect(() => {
-    camera.position.set(0, 1.7, 0); // Natural eye level
-    camera.lookAt(0, 1.7, -4); // Facing back counters
+    camera.position.set(0, 1.7, 0);
+    camera.lookAt(0, 1.7, -4);
   }, [camera]);
 
-  // Controles de puntero nativos de Three.js (SIN listener global en document)
+  // Controles de puntero nativos de Three.js
   useEffect(() => {
     if (!enabled) {
       if (controlsRef.current) {
@@ -76,7 +105,7 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
     };
   }, [enabled, camera, gl.domElement, setIsLocked, onMoveChange]);
 
-  // Keyboard and mouse interaction listeners
+  // Event listeners de teclado y ratón: estables y persistentes (no se recrean en cada tick de tiempo)
   useEffect(() => {
     if (!enabled) return;
 
@@ -100,7 +129,7 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
           break;
         case 'KeyE':
           if (isLocked) {
-            onInteract();
+            onInteractRef.current();
           }
           break;
       }
@@ -126,10 +155,9 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      // Left click interacts only if locked and enabled and not the initial lock click
       if (isLocked && enabled && e.button === 0) {
         if (performance.now() - justLockedTime.current > 150) {
-          onInteract();
+          onInteractRef.current();
         }
       }
     };
@@ -143,31 +171,28 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [enabled, isLocked, onInteract]);
+  }, [enabled, isLocked]);
 
-  // Movement & Raycasting frame loop
+  // Bucle de física, movimiento y raycasting optimizado
   useFrame((_, delta) => {
     if (!enabled || !isLocked) return;
 
     const baseSpeed = 4.8 * (1 + walkSpeedBonus);
     const speed = baseSpeed * Math.min(delta, 0.08);
 
-    const dir = new Vector3();
-    const camDir = new Vector3();
-    const camSide = new Vector3();
+    _dir.set(0, 0, 0);
+    camera.getWorldDirection(_camDir);
+    _camDir.y = 0;
+    _camDir.normalize();
 
-    camera.getWorldDirection(camDir);
-    camDir.y = 0;
-    camDir.normalize();
+    _camSide.crossVectors(_camDir, _up).normalize();
 
-    camSide.crossVectors(camDir, new Vector3(0, 1, 0)).normalize();
+    if (moveState.current.forward) _dir.add(_camDir);
+    if (moveState.current.backward) _dir.sub(_camDir);
+    if (moveState.current.left) _dir.sub(_camSide);
+    if (moveState.current.right) _dir.add(_camSide);
 
-    if (moveState.current.forward) dir.add(camDir);
-    if (moveState.current.backward) dir.sub(camDir);
-    if (moveState.current.left) dir.sub(camSide);
-    if (moveState.current.right) dir.add(camSide);
-
-    const isMoving = dir.lengthSq() > 0.001;
+    const isMoving = _dir.lengthSq() > 0.001;
 
     if (isMoving !== wasMovingRef.current) {
       wasMovingRef.current = isMoving;
@@ -175,11 +200,11 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
     }
 
     if (isMoving) {
-      dir.normalize();
-      const nextX = camera.position.x + dir.x * speed;
-      const nextZ = camera.position.z + dir.z * speed;
+      _dir.normalize();
+      const nextX = camera.position.x + _dir.x * speed;
+      const nextZ = camera.position.z + _dir.z * speed;
 
-      // Room boundaries (comfortably inside walls)
+      // Límites de la cocina
       const minX = -4.5;
       const maxX = 4.5;
       const minZ = -4.6;
@@ -188,34 +213,21 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
       let validX = nextX;
       let validZ = nextZ;
 
-      // Room clamp
       if (validX < minX) validX = minX;
       if (validX > maxX) validX = maxX;
       if (validZ < minZ) validZ = minZ;
       if (validZ > maxZ) validZ = maxZ;
 
-      // Furniture sliding collisions:
-      // Left counter (Ingredients shelf)
-      if (validX < -3.8 && validZ > -5.2 && validZ < -0.8) {
-        validX = -3.8;
-      }
-      // Right counter (Decorating station)
-      if (validX > 3.8 && validZ > -5.2 && validZ < -0.8) {
-        validX = 3.8;
-      }
-      // Back table (Mixer & Oven)
-      if (validZ < -4.2 && validX > -3.5 && validX < 3.5) {
-        validZ = -4.2;
-      }
-      // Front Service counter
-      if (validZ > 2.5 && validX > -3.5 && validX < 3.5) {
-        validZ = 2.5;
-      }
+      // Colisiones con mobiliario
+      if (validX < -3.8 && validZ > -5.2 && validZ < -0.8) validX = -3.8;
+      if (validX > 3.8 && validZ > -5.2 && validZ < -0.8) validX = 3.8;
+      if (validZ < -4.2 && validX > -3.5 && validX < 3.5) validZ = -4.2;
+      if (validZ > 2.5 && validX > -3.5 && validX < 3.5) validZ = 2.5;
 
       camera.position.x = validX;
       camera.position.z = validZ;
 
-      // Footstep sound
+      // Sonido de pasos (reutiliza buffer pre-sintetizado sin GC lag)
       const now = performance.now();
       if (now - lastStepTime.current > 330) {
         sounds.playFootstep();
@@ -223,41 +235,33 @@ export const PlayerController: React.FC<PlayerControllerProps> = ({
       }
     }
 
-    // Raycast for interactable under crosshair
-    raycaster.current.setFromCamera(new Vector2(0, 0), camera);
-    raycaster.current.far = 4.0; // Comfortable reach distance
+    // Raycast optimizado: corre cada 2 fotogramas para reducir sobrecarga de GPU/CPU
+    frameCounterRef.current++;
+    if (frameCounterRef.current % 2 === 0) {
+      raycaster.current.setFromCamera(ORIGIN_2D, camera);
+      raycaster.current.far = 4.0;
 
-    const intersects = raycaster.current.intersectObjects(scene.children, true);
-    let hitInteractable: string | null = null;
+      const intersects = raycaster.current.intersectObjects(scene.children, true);
+      let hitInteractable: string | null = null;
 
-    const validNames = [
-      'flour',
-      'egg',
-      'milk',
-      'chocolate',
-      'sugar',
-      'strawberry',
-      'mixer',
-      'oven',
-      'decorating',
-      'counter',
-      'customer',
-      'trash',
-    ];
-
-    for (const hit of intersects) {
-      let cur: Object3D | null = hit.object;
-      while (cur) {
-        if (cur.name && validNames.includes(cur.name)) {
-          hitInteractable = cur.name === 'customer' ? 'counter' : cur.name;
-          break;
+      for (let i = 0; i < intersects.length; i++) {
+        let cur: Object3D | null = intersects[i].object;
+        while (cur) {
+          if (cur.name && VALID_INTERACTABLE_NAMES.includes(cur.name)) {
+            hitInteractable = cur.name === 'customer' ? 'counter' : cur.name;
+            break;
+          }
+          cur = cur.parent;
         }
-        cur = cur.parent;
+        if (hitInteractable) break;
       }
-      if (hitInteractable) break;
-    }
 
-    onFocusChange(hitInteractable);
+      // CRÍTICO: Únicamente disparar setFocusedObject en React si el objeto bajo la mira realmente cambió
+      if (hitInteractable !== lastFocusRef.current) {
+        lastFocusRef.current = hitInteractable;
+        onFocusChange(hitInteractable);
+      }
+    }
   });
 
   return null;
