@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export type CardVariant = 'cream' | 'pink' | 'purple' | 'amber' | 'dark' | 'glass';
+export type CardVariant = 'cream' | 'pink' | 'purple' | 'amber' | 'dark' | 'glass' | 'neutral';
 
 export interface CandyCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
@@ -32,6 +32,8 @@ export const CandyCard: React.FC<CandyCardProps> = ({
       'bg-slate-950/85 backdrop-blur-md border border-white/20 shadow-md text-white',
     glass:
       'bg-white/80 backdrop-blur-md border-2 border-pink-200/70 shadow-[0_8px_32px_rgba(219,39,119,0.12)] text-[#451a03]',
+    neutral:
+      'bg-stone-100/90 border-2 border-stone-200 shadow-sm text-stone-600',
   };
 
   const hoverClass = hoverEffect

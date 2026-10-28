@@ -195,7 +195,7 @@ export default function GamePage() {
       const playerUnlockedLevel = progressRef.current.unlockedLevel || 1;
       const playerUnlockedRecipes = getUnlockedRecipesForLevel(playerUnlockedLevel);
       const available = levelDef.availableProducts.filter(p => playerUnlockedRecipes.includes(p));
-      const pool = available.length > 0 ? available : ['cookie'];
+      const pool: ProductId[] = available.length > 0 ? available : ['cookie'];
 
       const items: ProductId[] = [];
       const orderCount =
